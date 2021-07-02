@@ -1,83 +1,35 @@
-// const chalk =  require('chalk');
-// const text = require('./data');
-//
-// console.log(chalk.blue(text));
-
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 
 const server = http.createServer((req, res) => {
+    if (req.method === 'GET') {
+        res.writeHead(200, {
+            'Content-Type': 'text/html'
+        })
+        res.end(`
+       <h1>Form</h1>
+       <form method="post" action="/">
+       <input name="title" type="text" />
+       <button type="submit">Send</button>
+        </form>
+       `)
+    } else if (req.method === 'POST') {
+        const body = [];
+        res.writeHead(200, {
+            'Content-Type': 'text/html; charset=utf-8'
+        })
 
-    console.log(req.url)
+        req.on('data', data => {
+            body.push(Buffer.from(data));
+        })
 
-    // if(req.url === '/') {
-    //     fs.readFile(path.join(__dirname, 'public', 'index.html'), (err, data) => {
-    //         if(err) {
-    //             throw err
-    //         }
-    //
-    //         res.writeHead(200, {
-    //             'Content-Type': 'text/html'
-    //         })
-    //         res.end(data)
-    //     })
-    // } else if(req.url === '/contact') {
-    //     fs.readFile(path.join(__dirname, 'public', 'contact.html'), (err, data) => {
-    //         if(err) {
-    //             throw err
-    //         }
-    //
-    //         res.writeHead(200, {
-    //             'Content-Type': 'text/html'
-    //         })
-    //         res.end(data)
-    //     })
-    // }
+        req.on('end', () => {
+            const message = body.toString().split('=')[1];
 
-    let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
-    const ext = path.extname(filePath);
-    let contentType = 'text/html';
-
-    switch (ext) {
-        case '.css':
-            contentType = 'text/css'
-            break
-        case '.js':
-            contentType = 'text/javascript'
-            break
-        default:
-            contentType = 'text/html'
+            res.end(` <h1>Ваше сообщение: ${message}</h1>`)
+        })
     }
-
-    if(!ext) {
-        filePath += '.html'
-    }
-
-    fs.readFile(filePath, (err, content) => {
-        if(err) {
-            fs.readFile(path.join(__dirname, 'public', 'error.html'), (err, data) => {
-                if(err) {
-                    res.writeHead(500)
-                    res.end('Error')
-                } else {
-                    res.writeHead(200, {
-                        'Content-Type': 'text/html'
-                    })
-                    res.end(data)
-                }
-            })
-        } else {
-            res.writeHead(200, {
-                'Content-Type': contentType
-            })
-            res.end(content)
-        }
-    })
 })
 
-const PORT = process.env.PORT || 3000
-
 server.listen(3000, () => {
-    console.log(`Server has been started on ${PORT}...`);
+    console.log('Server is running...');
 })
